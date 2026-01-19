@@ -1,5 +1,7 @@
 FROM denoland/deno:latest
 
+LABEL org.opencontainers.image.source=https://github.com/miztroh/tv-schedule
+
 WORKDIR /app
 
 COPY . .
