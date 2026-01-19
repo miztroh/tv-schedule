@@ -1,0 +1,11 @@
+{
+	"tasks": {
+		"serve": "deno run --unstable-cron --allow-net=0.0.0.0:8000,json.schedulesdirect.org:443,api4.thetvdb.com:443,github.com:443,release-assets.githubusercontent.com:443 --allow-read=./data --allow-write=./data --allow-read=$HOME/Library/Caches/deno/plug --allow-write=$HOME/Library/Caches/deno/plug --allow-env --allow-ffi ./serve.ts"
+	},
+	"imports": {
+		"@db/sqlite": "jsr:@db/sqlite@^0.13.0",
+		"@libs/xml": "jsr:@libs/xml@^7.0.3",
+		"@std/assert": "jsr:@std/assert@1",
+		"xmlbuilder2": "npm:xmlbuilder2@^4.0.3"
+	}
+}
