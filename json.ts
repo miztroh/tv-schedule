@@ -1,4 +1,4 @@
-import { type SchedulesDirectLineupsResponse, type SchedulesDirectSchedulesResponse, type SchedulesDirectProgramsResponse, type SchedulesDirectMetadataProgramsResponse, type SchedulesDirectJson } from './schedulesDirectJson.ts';
+import { type SchedulesDirectLineupsResponse, type SchedulesDirectSchedulesResponse, type SchedulesDirectProgramsResponse, type SchedulesDirectJson } from './schedulesDirectJson.ts';
 
 export const schedulesDirectJson = async (token: string): Promise<SchedulesDirectJson> => {
 	const days = Deno.env.get('SD_FETCH_DAYS');
@@ -81,33 +81,9 @@ export const schedulesDirectJson = async (token: string): Promise<SchedulesDirec
 		programsResponses.push(...programsResponse);
 	}
 
-	const metadataProgramsBatchSize = 500;
-	const metadataProgramsResponses: SchedulesDirectMetadataProgramsResponse[] = [];
-
-	for (let i = 0; i < programIDs.length; i += metadataProgramsBatchSize) {
-		const batchProgramIDs = programIDs.slice(i, i + metadataProgramsBatchSize);
-
-		const metadataProgramsRequest = await fetch(
-			`https://json.schedulesdirect.org/20141201/metadata/programs/?token=${token}`,
-			{
-				method: 'POST',
-				body: JSON.stringify(
-					batchProgramIDs
-				),
-				headers: {
-					'Content-Type': 'application/json'
-				}
-			}
-		);
-
-		const metadataProgramsResponse: SchedulesDirectMetadataProgramsResponse[] = await metadataProgramsRequest.json();
-		metadataProgramsResponses.push(...metadataProgramsResponse);
-	}
-
 	return {
 		lineup: lineupsResponse,
 		schedules: schedulesResponse,
-		programs: programsResponses,
-		metadataPrograms: metadataProgramsResponses
+		programs: programsResponses
 	};
 };

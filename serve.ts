@@ -3,6 +3,9 @@ import { schedulesDirectJson } from './json.ts';
 import { schedulesDirectToken } from './schedulesDirectJson.ts';
 import { tvDbToken } from './tvdb.ts';
 
+let updateHour: number = +(Deno.env.get('SD_UPDATE_HOUR') ?? '0');
+if (isNaN(updateHour) || updateHour < 0 || updateHour > 23) updateHour = 0;
+
 export interface Tokens {
 	schedulesDirect: string;
 	tvDb: string;
@@ -33,12 +36,6 @@ try {
 	await updateTokens();
 }
 
-Deno.cron(
-	'update-tokens',
-	'0 0 * * *',
-	updateTokens
-);
-
 const scheduleFetch = async () => {
 	try {
 		console.log('Updating schedule.json');
@@ -51,12 +48,6 @@ const scheduleFetch = async () => {
 		console.error('Error fetching schedule:', error);
 	}
 };
-
-Deno.cron(
-	'schedule-fetch',
-	'5 0 * * *',
-	scheduleFetch
-);
 
 try {
 	await Deno.stat('./data/schedule.json');
@@ -71,6 +62,15 @@ try {
 	console.log('Creating schedule.xml');
 	await Deno.writeTextFile('./data/schedule.xml', await schedulesDirectXml(tokens.tvDb, JSON.parse(await Deno.readTextFile('./data/schedule.json'))));
 }
+
+Deno.cron(
+	'schedule-fetch',
+	`0 ${updateHour} * * *`,
+	async () => {
+		await updateTokens();
+		await scheduleFetch();
+	}
+);
 
 Deno.serve(
 	async (req) => {

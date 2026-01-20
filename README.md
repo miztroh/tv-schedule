@@ -21,6 +21,8 @@ services:
       SD_USERNAME: ${SD_USERNAME}
       # SchedulesDirect password (see note above)
       SD_PASSWORD: ${SD_PASSWORD}
+      # SchedulesDirect update hour (0-23)
+      SD_UPDATE_HOUR: ${SD_UPDATE_HOUR}
       # The TvDB API key
       TVDB_APIKEY: ${TVDB_APIKEY}
     image: ghcr.io/miztroh/tv-schedule:${TV_SCHEDULE_VERSION}

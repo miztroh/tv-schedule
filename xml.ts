@@ -60,8 +60,6 @@ export const schedulesDirectXml = async (token: string, json: SchedulesDirectJso
 								async (programSchedule) => {
 									const program = json.programs.find((p) => p.programID === programSchedule.programID);
 									if (!program) throw new Error(`Program not found for programID: ${programSchedule.programID}`);
-									const metadataProgram = json.metadataPrograms.find((mp) => mp.programID === programSchedule.programID);
-									if (!metadataProgram) throw new Error(`Metadata Program not found for programID: ${programSchedule.programID}`);
 
 									const airDate = new Date(programSchedule.airDateTime);
 									const pad = (n: number) => n.toString().padStart(2, '0');
@@ -186,33 +184,31 @@ export const schedulesDirectXml = async (token: string, json: SchedulesDirectJso
 									let record = db.prepare('SELECT * FROM imageUrls WHERE programId = ?').get(program.programID);
 
 									if (!record) {
-										if (Array.isArray(metadataProgram.data)) {
-											let type: 'series' | 'movie' | undefined = undefined;
+										let type: 'series' | 'movie' | undefined = undefined;
 
-											if (program.entityType.toLowerCase().includes('movie')) type = 'movie';
-											else if (program.entityType.toLowerCase().includes('series') || program.entityType.toLowerCase().includes('episode')) type = 'series';
+										if (program.entityType.toLowerCase().includes('movie')) type = 'movie';
+										else if (program.entityType.toLowerCase().includes('series') || program.entityType.toLowerCase().includes('episode')) type = 'series';
 
-											if (type) {
-												await new Promise(resolve => setTimeout(resolve, 100));
+										if (type) {
+											await new Promise(resolve => setTimeout(resolve, 100));
 
-												const searchRequest = await fetch(
-													`https://api4.thetvdb.com/v4/search?type=${type}&query=${encodeURIComponent(program.titles?.length ? program.titles[0].title120 : '')}`,
-													{
-														headers: {
-															'Authorization': `Bearer ${token}`,
-															'Content-Type': 'application/json'
-														}
+											const searchRequest = await fetch(
+												`https://api4.thetvdb.com/v4/search?type=${type}&query=${encodeURIComponent(program.titles?.length ? program.titles[0].title120 : '')}`,
+												{
+													headers: {
+														'Authorization': `Bearer ${token}`,
+														'Content-Type': 'application/json'
 													}
-												);
+												}
+											);
 
-												if (searchRequest.ok) {
-													const searchResponse: TvDbSearchResponse = await searchRequest.json();
+											if (searchRequest.ok) {
+												const searchResponse: TvDbSearchResponse = await searchRequest.json();
 
-													if (Array.isArray(searchResponse.data) && searchResponse.data.length > 0 && searchResponse.data[0].image_url) {
-														const imageUrl = searchResponse.data[0].image_url;
-														const insert = db.prepare('INSERT OR REPLACE INTO imageUrls (programId, imageUrl) VALUES (?, ?)');
-														insert.run(program.programID, imageUrl);
-													}
+												if (Array.isArray(searchResponse.data) && searchResponse.data.length > 0 && searchResponse.data[0].image_url) {
+													const imageUrl = searchResponse.data[0].image_url;
+													const insert = db.prepare('INSERT OR REPLACE INTO imageUrls (programId, imageUrl) VALUES (?, ?)');
+													insert.run(program.programID, imageUrl);
 												}
 											}
 										}

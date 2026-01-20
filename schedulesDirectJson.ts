@@ -66,20 +66,6 @@ export interface SchedulesDirectLineupsResponse {
 	};
 };
 
-export interface SchedulesDirectMetadataProgramsResponse {
-	programID: string;
-	data: {
-		width: number;
-		height: number;
-		uri: string;
-		ratio: string;
-		aspect: string;
-		category: string;
-		tier: string;
-		lastUpdate: string;
-	}[];
-};
-
 export interface SchedulesDirectProgramsResponse {
 	programID: string;
 	resourceID?: string;
@@ -202,5 +188,4 @@ export interface SchedulesDirectJson {
 	lineup: SchedulesDirectLineupsResponse;
 	schedules: SchedulesDirectSchedulesResponse[];
 	programs: SchedulesDirectProgramsResponse[];
-	metadataPrograms: SchedulesDirectMetadataProgramsResponse[];
 };
