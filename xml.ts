@@ -63,8 +63,8 @@ export const schedulesDirectXml = async (token: string, json: SchedulesDirectJso
 						'display-name': displayNames,
 						'icon': {
 							'@src': station.logo?.URL ? sanitizeXmlValue(station.logo.URL) : '',
-							'@width': station.logo?.width || '',
-							'@height': station.logo?.height || ''
+							'@width': station.logo?.width ? sanitizeXmlValue(station.logo.width.toString()) : '',
+							'@height': station.logo?.height ? sanitizeXmlValue(station.logo.height.toString()) : ''
 						}
 					}
 				}
@@ -122,14 +122,14 @@ export const schedulesDirectXml = async (token: string, json: SchedulesDirectJso
 										for (const c of program.cast || []) {
 											if (/guest|guest star/i.test(c.role)) {
 												if (!creditObj.guest) creditObj.guest = [];
-												creditObj.guest.push(c.name);
+												creditObj.guest.push(sanitizeXmlValue(c.name));
 											} else {
 												if (!creditObj.actor) creditObj.actor = [];
 
 												if (c.characterName) {
-													creditObj.actor.push({ '@role': c.characterName, '#': c.name });
+													creditObj.actor.push({ '@role': sanitizeXmlValue(c.characterName), '#': sanitizeXmlValue(c.name) });
 												} else {
-													creditObj.actor.push(c.name);
+													creditObj.actor.push(sanitizeXmlValue(c.name));
 												}
 											}
 										}
@@ -137,19 +137,19 @@ export const schedulesDirectXml = async (token: string, json: SchedulesDirectJso
 										for (const c of program.crew || []) {
 											if (/producer/i.test(c.role)) {
 												if (!creditObj.producer) creditObj.producer = [];
-												creditObj.producer.push(c.name);
+												creditObj.producer.push(sanitizeXmlValue(c.name));
 											} else if (/director/i.test(c.role)) {
 												if (!creditObj.director) creditObj.director = [];
-												creditObj.director.push(c.name);
+												creditObj.director.push(sanitizeXmlValue(c.name));
 											} else if (/writer/i.test(c.role)) {
 												if (!creditObj.writer) creditObj.writer = [];
-												creditObj.writer.push(c.name);
+												creditObj.writer.push(sanitizeXmlValue(c.name));
 											} else if (/host|anchor/i.test(c.role)) {
 												if (!creditObj.presenter) creditObj.presenter = [];
-												creditObj.presenter.push(c.name);
+												creditObj.presenter.push(sanitizeXmlValue(c.name));
 											} else if (/guest|contestant/i.test(c.role)) {
 												if (!creditObj.guest) creditObj.guest = [];
-												creditObj.guest.push(c.name);
+												creditObj.guest.push(sanitizeXmlValue(c.name));
 											}
 										}
 
@@ -159,9 +159,9 @@ export const schedulesDirectXml = async (token: string, json: SchedulesDirectJso
 									let desc = undefined;
 
 									if (program.descriptions?.description1000?.length) {
-										desc = program.descriptions.description1000[0].description;
+										desc = sanitizeXmlValue(program.descriptions.description1000[0].description);
 									} else if (program.descriptions?.description100?.length) {
-										desc = program.descriptions.description100[0].description;
+										desc = sanitizeXmlValue(program.descriptions.description100[0].description);
 									}
 
 									let category: string[] | undefined = undefined;
@@ -170,7 +170,7 @@ export const schedulesDirectXml = async (token: string, json: SchedulesDirectJso
 
 									if (program.showType) {
 										if (!category) category = [];
-										category.push(program.showType);
+										category.push(sanitizeXmlValue(program.showType));
 									}
 
 									if (program.entityType) {
@@ -312,18 +312,18 @@ export const schedulesDirectXml = async (token: string, json: SchedulesDirectJso
 										episodeNum.push(
 											{
 												'@system': 'xmltv_ns',
-												'#': `${season}.${episode}.${part}`
+												'#': sanitizeXmlValue(`${season}.${episode}.${part}`)
 											}
 										);
 									}
 
-									if (program.programID) episodeNum.push({ '@system': 'dd_progid', '#': program.programID });
+									if (program.programID) episodeNum.push({ '@system': 'dd_progid', '#': sanitizeXmlValue(program.programID) });
 
 									let previouslyShown = undefined;
-									if (!programSchedule.new && program.originalAirDate) previouslyShown = { '@start': program.originalAirDate.replace(/-/g, '') };
+									if (!programSchedule.new && program.originalAirDate) previouslyShown = { '@start': sanitizeXmlValue(program.originalAirDate.replace(/-/g, '')) };
 
 									let premiere = undefined;
-									if (typeof programSchedule.isPremiereOrFinale === 'string' && /premiere/i.test(programSchedule.isPremiereOrFinale)) premiere = [programSchedule.isPremiereOrFinale];
+									if (typeof programSchedule.isPremiereOrFinale === 'string' && /premiere/i.test(programSchedule.isPremiereOrFinale)) premiere = [sanitizeXmlValue(programSchedule.isPremiereOrFinale)];
 
 									let subtitles = undefined;
 									if (Array.isArray(programSchedule.audioProperties) && programSchedule.audioProperties.some((a) => a === 'cc')) subtitles = [{ '@type': 'teletext' }];
@@ -331,22 +331,22 @@ export const schedulesDirectXml = async (token: string, json: SchedulesDirectJso
 									let rating = undefined;
 
 									if (Array.isArray(program.contentRating) && program.contentRating.length) {
-										rating = program.contentRating.map((r) => ({ '@system': r.body, value: r.code }));
+										rating = program.contentRating.map((r) => ({ '@system': sanitizeXmlValue(r.body), value: sanitizeXmlValue(r.code) }));
 									} else if (Array.isArray(programSchedule.ratings) && programSchedule.ratings.length) {
-										rating = programSchedule.ratings.map((r) => ({ '@system': r.body, value: r.code }));
+										rating = programSchedule.ratings.map((r) => ({ '@system': sanitizeXmlValue(r.body), value: sanitizeXmlValue(r.code) }));
 									}
 
 									let starRating = undefined;
 
 									if (program.movie?.qualityRating?.length) {
 										const r = program.movie.qualityRating[0];
-										starRating = [{ '#': `${r.rating}/${r.maxRating}`, '@system': r.ratingsBody }];
+										starRating = [{ '#': sanitizeXmlValue(`${r.rating}/${r.maxRating}`), '@system': sanitizeXmlValue(r.ratingsBody) }];
 									}
 
 									return {
 										'@start': start,
 										'@stop': stop,
-										'@channel': `I${station.stationID}.json.schedulesdirect.org`,
+										'@channel': sanitizeXmlValue(`I${station.stationID}.json.schedulesdirect.org`),
 										...(program.titles?.length ? { title: sanitizeXmlValue(program.titles[0].title120) } : {}),
 										...(program.episodeTitle150 ? { 'sub-title': sanitizeXmlValue(program.episodeTitle150) } : {}),
 										...(desc ? { desc: sanitizeXmlValue(desc) } : {}),
