@@ -22,6 +22,26 @@ type Credits = {
 	presenter?: string[];
 };
 
+function sanitizeXmlValue(value: string): string {
+	return value
+		.replace(/&/g, '&amp;')
+		.replace(/</g, '&lt;')
+		.replace(/>/g, '&gt;')
+		.replace(/"/g, '&quot;')
+		.replace(/'/g, '&apos;');
+};
+
+function sanitizeCredits(credits: Credits): Credits {
+	const out: Credits = {};
+	if (credits.actor) out.actor = credits.actor.map(a => typeof a === 'string' ? sanitizeXmlValue(a) : { '@role': sanitizeXmlValue(a['@role']), '#': sanitizeXmlValue(a['#']) });
+	if (credits.guest) out.guest = credits.guest.map(sanitizeXmlValue);
+	if (credits.producer) out.producer = credits.producer.map(sanitizeXmlValue);
+	if (credits.director) out.director = credits.director.map(sanitizeXmlValue);
+	if (credits.writer) out.writer = credits.writer.map(sanitizeXmlValue);
+	if (credits.presenter) out.presenter = credits.presenter.map(sanitizeXmlValue);
+	return out;
+};
+
 export const schedulesDirectXml = async (token: string, json: SchedulesDirectJson): Promise<string> => {
 	const xml = {
 		'tv': {
@@ -31,18 +51,18 @@ export const schedulesDirectXml = async (token: string, json: SchedulesDirectJso
 			'channel': json.lineup.stations.map(
 				(station) => {
 					const displayNames = [
-						station.name,
-						station.callsign,
+						sanitizeXmlValue(station.name),
+						sanitizeXmlValue(station.callsign),
 					];
 
 					const channel = json.lineup.map.find((map) => map.stationID === station.stationID)?.channel;
-					if (channel) displayNames.push(channel);
+					if (channel) displayNames.push(sanitizeXmlValue(channel));
 
 					return {
 						'@id': `I${station.stationID}.json.schedulesdirect.org`,
 						'display-name': displayNames,
 						'icon': {
-							'@src': station.logo?.URL || '',
+							'@src': station.logo?.URL ? sanitizeXmlValue(station.logo.URL) : '',
 							'@width': station.logo?.width || '',
 							'@height': station.logo?.height || ''
 						}
@@ -327,23 +347,23 @@ export const schedulesDirectXml = async (token: string, json: SchedulesDirectJso
 										'@start': start,
 										'@stop': stop,
 										'@channel': `I${station.stationID}.json.schedulesdirect.org`,
-										...(program.titles?.length ? { title: program.titles[0].title120 } : {}),
-										...(program.episodeTitle150 ? { 'sub-title': program.episodeTitle150 } : {}),
-										...(desc ? { desc } : {}),
-										...(credits ? { credits } : {}),
-										...(program.movie?.year ? { date: program.movie.year } : {}),
-										...(category ? { category } : {}),
+										...(program.titles?.length ? { title: sanitizeXmlValue(program.titles[0].title120) } : {}),
+										...(program.episodeTitle150 ? { 'sub-title': sanitizeXmlValue(program.episodeTitle150) } : {}),
+										...(desc ? { desc: sanitizeXmlValue(desc) } : {}),
+										...(credits ? { credits: sanitizeCredits(credits) } : {}),
+										...(program.movie?.year ? { date: sanitizeXmlValue(program.movie.year) } : {}),
+										...(category ? { category: category.map(sanitizeXmlValue) } : {}),
 										...(length ? { length } : {}),
 										...(icon ? { icon } : {}),
-										...(url ? { url } : {}),
-										...(episodeNum.length ? { 'episode-num': episodeNum } : {}),
+										...(url ? { url: url.map(sanitizeXmlValue) } : {}),
+										...(episodeNum.length ? { 'episode-num': episodeNum.map(en => ({ ...en, '#': sanitizeXmlValue(en['#']) })) } : {}),
 										...(video ? { video } : {}),
 										...(audio ? { audio } : {}),
 										...(previouslyShown ? { 'previously-shown': previouslyShown } : {}),
-										...(premiere ? { premiere } : {}),
+										...(premiere ? { premiere: premiere.map(sanitizeXmlValue) } : {}),
 										...(subtitles ? { subtitles } : {}),
-										...(rating ? { rating } : {}),
-										...(starRating ? { 'star-rating': starRating } : {}),
+										...(rating ? { rating: rating.map(r => ({ ...r, '@system': sanitizeXmlValue(r['@system']), value: sanitizeXmlValue(r.value) })) } : {}),
+										...(starRating ? { 'star-rating': starRating.map(sr => ({ ...sr, '#': sanitizeXmlValue(sr['#']), '@system': sanitizeXmlValue(sr['@system']) })) } : {}),
 									};
 								}
 							)
